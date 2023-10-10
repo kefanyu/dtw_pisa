@@ -1,0 +1,233 @@
+---
+title: "DTW"
+author: "Kefan Yu"
+date: "2023-10-03"
+output: html_document
+---
+
+```{r}
+reading <- read.csv("../data_all/dtw_reading.csv")
+head(reading)
+```
+
+Preprocessing
+
+```{r}
+reading <- subset(reading, select = -c(X) )
+reading
+```
+
+```{r}
+colnames(reading)[colnames(reading) == "X2000"] = "2000"
+colnames(reading)[colnames(reading) == "X2003"] = "2003"
+colnames(reading)[colnames(reading) == "X2006"] = "2006"
+colnames(reading)[colnames(reading) == "X2009"] = "2009"
+colnames(reading)[colnames(reading) == "X2012"] = "2012"
+colnames(reading)[colnames(reading) == "X2015"] = "2015"
+colnames(reading)[colnames(reading) == "X2018"] = "2018"
+
+reading
+```
+
+DTW
+
+```{r}
+library(dtw)
+```
+
+```{r}
+country = reading[['Countries']]
+```
+
+```{r}
+dtw_reading <- reading[, -1]
+```
+
+```{r}
+num_con <- nrow(dtw_reading)
+reading_dist <- matrix(NA, nrow = num_con, ncol = num_con)
+#dtw_distances
+colnames(reading_dist) <- country
+rownames(reading_dist) <- country
+reading_dist
+```
+
+```{r}
+dtw_reading2 <- dtw_reading
+```
+
+```{r}
+idx <- which(is.na(dtw_reading2), arr.ind=TRUE)
+dtw_reading2[ idx ] <- rowMeans( dtw_reading2[ idx[,1] , ], na.rm=TRUE)
+```
+
+```{r}
+for (i in 1:num_con) {
+  for (j in 1:num_con) {
+    if (i != j) {
+      result <- dtw(dtw_reading2[i, ], dtw_reading2[j, ])
+      reading_dist[i, j] <- result$distance
+    } else {
+      reading_dist[i, j] <- 0  # distance with itself is 0
+    }
+  }
+}
+```
+
+```{r}
+print(reading_dist)
+```
+
+```{r}
+reading_dist_df <- as.data.frame(reading_dist)
+```
+
+```{r}
+write.csv(reading_dist_df, "../data_all/dtw_reading_dist.csv", row.names=TRUE)
+```
+
+```{r}
+math <- read.csv("../data_all/dtw_math.csv")
+math <- subset(math, select = -c(X) )
+
+colnames(math)[colnames(math) == "X2000"] = "2000"
+colnames(math)[colnames(math) == "X2003"] = "2003"
+colnames(math)[colnames(math) == "X2006"] = "2006"
+colnames(math)[colnames(math) == "X2009"] = "2009"
+colnames(math)[colnames(math) == "X2012"] = "2012"
+colnames(math)[colnames(math) == "X2015"] = "2015"
+colnames(math)[colnames(math) == "X2018"] = "2018"
+
+dtw_math <- math[, -1]
+
+idx2 <- which(is.na(dtw_math), arr.ind=TRUE)
+dtw_math[ idx2 ] <- rowMeans( dtw_math[ idx2[,1] , ], na.rm=TRUE)
+```
+
+```{r}
+math_dist <- matrix(NA, nrow = num_con, ncol = num_con)
+#dtw_distances
+colnames(math_dist) <- country
+rownames(math_dist) <- country
+```
+
+```{r}
+for (i in 1:num_con) {
+  for (j in 1:num_con) {
+    if (i != j) {
+      result <- dtw(dtw_math[i, ], dtw_math[j, ])
+      math_dist[i, j] <- result$distance
+    } else {
+      math_dist[i, j] <- 0  # distance with itself is 0
+    }
+  }
+}
+
+print(math_dist)
+```
+
+```{r}
+math_dist_df <- as.data.frame(math_dist)
+```
+
+```{r}
+math <- read.csv("../data_all/dtw_math.csv")
+math <- subset(math, select = -c(X) )
+
+colnames(math)[colnames(math) == "X2000"] = "2000"
+colnames(math)[colnames(math) == "X2003"] = "2003"
+colnames(math)[colnames(math) == "X2006"] = "2006"
+colnames(math)[colnames(math) == "X2009"] = "2009"
+colnames(math)[colnames(math) == "X2012"] = "2012"
+colnames(math)[colnames(math) == "X2015"] = "2015"
+colnames(math)[colnames(math) == "X2018"] = "2018"
+
+dtw_math <- math[, -1]
+
+idx2 <- which(is.na(dtw_math), arr.ind=TRUE)
+dtw_math[ idx2 ] <- rowMeans( dtw_math[ idx2[,1] , ], na.rm=TRUE)
+```
+
+```{r}
+math_dist <- matrix(NA, nrow = num_con, ncol = num_con)
+#dtw_distances
+colnames(math_dist) <- country
+rownames(math_dist) <- country
+```
+
+```{r}
+for (i in 1:num_con) {
+  for (j in 1:num_con) {
+    if (i != j) {
+      result <- dtw(dtw_math[i, ], dtw_math[j, ])
+      math_dist[i, j] <- result$distance
+    } else {
+      math_dist[i, j] <- 0  # distance with itself is 0
+    }
+  }
+}
+
+print(math_dist)
+```
+
+```{r}
+math_dist_df <- as.data.frame(math_dist)
+```
+
+```{r}
+sci <- read.csv("../data_all/dtw_sci.csv")
+sci <- subset(sci, select = -c(X) )
+
+colnames(sci)[colnames(sci) == "X2000"] = "2000"
+colnames(sci)[colnames(sci) == "X2003"] = "2003"
+colnames(sci)[colnames(sci) == "X2006"] = "2006"
+colnames(sci)[colnames(sci) == "X2009"] = "2009"
+colnames(sci)[colnames(sci) == "X2012"] = "2012"
+colnames(sci)[colnames(sci) == "X2015"] = "2015"
+colnames(sci)[colnames(sci) == "X2018"] = "2018"
+
+dtw_sci <- sci[, -1]
+
+idx3 <- which(is.na(dtw_sci), arr.ind=TRUE)
+dtw_sci[ idx3 ] <- rowMeans( dtw_sci[ idx3[,1] , ], na.rm=TRUE)
+```
+
+```{r}
+sci_dist <- matrix(NA, nrow = num_con, ncol = num_con)
+#dtw_distances
+colnames(sci_dist) <- country
+rownames(sci_dist) <- country
+```
+
+```{r}
+for (i in 1:num_con) {
+  for (j in 1:num_con) {
+    if (i != j) {
+      result <- dtw(dtw_sci[i, ], dtw_sci[j, ])
+      sci_dist[i, j] <- result$distance
+    } else {
+      sci_dist[i, j] <- 0  # distance with itself is 0
+    }
+  }
+}
+
+print(sci_dist)
+```
+
+```{r}
+sci_dist_df <- as.data.frame(sci_dist)
+```
+
+```{r}
+reading_dist_df <- cbind(Countries = country, reading_dist_df)
+math_dist_df <- cbind(Countries = country, math_dist_df)
+sci_dist_df <- cbind(Countries = country, sci_dist_df)
+```
+
+```{r}
+library(writexl)
+```
+
+```{r}
+write_xlsx(list("Reading" = reading_dist_df, "Math" = math_dist_df, "Science" = sci_dist_df),"../data_all/dtw_avg.xlsx")
+```
