@@ -1,0 +1,124 @@
+---
+title: "dtw_rank"
+author: "Kefan Yu"
+date: "2023-10-03"
+output: html_document
+---
+
+```{r}
+library(readxl)
+```
+
+```{r}
+reading <- read_excel("../data_all/new_trend_rank.xlsx", sheet = "Reading")
+math <- read_excel("../data_all/new_trend_rank.xlsx", sheet = "Math")
+sci <- read_excel("../data_all/new_trend_rank.xlsx", sheet = "Science")
+```
+
+```{r}
+reading <- subset(reading, select = -c(...1) )
+country = reading[['Countries']]
+dtw_reading <- reading[, -1]
+num_con <- nrow(dtw_reading)
+```
+
+```{r}
+library(zoo)
+```
+
+```{r}
+dtw_reading[] <- t(apply(dtw_reading, 1, function(x) na.locf0(na.locf0(x), fromLast = TRUE)))
+```
+
+```{r}
+reading_dist <- matrix(NA, nrow = num_con, ncol = num_con)
+#dtw_distances
+colnames(reading_dist) <- country
+rownames(reading_dist) <- country
+```
+
+```{r}
+library(dtw)
+```
+
+```{r}
+for (i in 1:num_con) {
+  for (j in 1:num_con) {
+    if (i != j) {
+      result <- dtw(dtw_reading[i, ], dtw_reading[j, ])
+      reading_dist[i, j] <- result$distance
+    } else {
+      reading_dist[i, j] <- 0  # distance with itself is 0
+    }
+  }
+}
+
+reading_dist_df <- as.data.frame(reading_dist)
+```
+
+```{r}
+math <- subset(math, select = -c(...1) )
+dtw_math <- math[, -1]
+
+dtw_math[] <- t(apply(dtw_math, 1, function(x) na.locf0(na.locf0(x), fromLast = TRUE)))
+
+math_dist <- matrix(NA, nrow = num_con, ncol = num_con)
+#dtw_distances
+colnames(math_dist) <- country
+rownames(math_dist) <- country
+```
+
+```{r}
+for (i in 1:num_con) {
+  for (j in 1:num_con) {
+    if (i != j) {
+      result <- dtw(dtw_math[i, ], dtw_math[j, ])
+      math_dist[i, j] <- result$distance
+    } else {
+      math_dist[i, j] <- 0  # distance with itself is 0
+    }
+  }
+}
+
+math_dist_df <- as.data.frame(math_dist)
+```
+
+```{r}
+sci <- subset(sci, select = -c(...1) )
+dtw_sci <- sci[, -1]
+
+# https://stackoverflow.com/questions/64002217/how-to-replace-any-nas-in-dataframe-with-the-previous-value-in-the-same-row-in-r
+dtw_sci[] <- t(apply(dtw_sci, 1, function(x) na.locf0(na.locf0(x), fromLast = TRUE)))
+
+sci_dist <- matrix(NA, nrow = num_con, ncol = num_con)
+#dtw_distances
+colnames(sci_dist) <- country
+rownames(sci_dist) <- country
+```
+
+```{r}
+for (i in 1:num_con) {
+  for (j in 1:num_con) {
+    if (i != j) {
+      result <- dtw(dtw_sci[i, ], dtw_sci[j, ])
+      sci_dist[i, j] <- result$distance
+    } else {
+      sci_dist[i, j] <- 0  # distance with itself is 0
+    }
+  }
+}
+
+sci_dist_df <- as.data.frame(sci_dist)
+```
+
+```{r}
+reading_dist_df <- cbind(Countries = country, reading_dist_df)
+math_dist_df <- cbind(Countries = country, math_dist_df)
+sci_dist_df <- cbind(Countries = country, sci_dist_df)
+```
+
+```{r}
+library(writexl)
+
+write_xlsx(list("Reading" = reading_dist_df, "Math" = math_dist_df, "Science" = sci_dist_df),"../data_all/dtw_rank.xlsx")
+```

@@ -1,0 +1,185 @@
+---
+title: "dtw_cluster"
+author: "Kefan Yu"
+date: "2023-10-10"
+output: html_document
+---
+
+```{r}
+library(dtwclust)
+library(dtw)
+```
+
+```{r}
+reading <- read.csv("../data_all/dtw_reading.csv")
+head(reading)
+```
+
+
+```{r}
+reading <- subset(reading, select = -c(X) )
+reading
+```
+
+```{r}
+colnames(reading)[colnames(reading) == "X2000"] = "2000"
+colnames(reading)[colnames(reading) == "X2003"] = "2003"
+colnames(reading)[colnames(reading) == "X2006"] = "2006"
+colnames(reading)[colnames(reading) == "X2009"] = "2009"
+colnames(reading)[colnames(reading) == "X2012"] = "2012"
+colnames(reading)[colnames(reading) == "X2015"] = "2015"
+colnames(reading)[colnames(reading) == "X2018"] = "2018"
+
+reading
+```
+```{r}
+country = reading[['Countries']]
+```
+
+```{r}
+dtw_reading <- reading[, -1]
+```
+
+```{r}
+reading_lst <- tslist(dtw_reading)
+```
+
+```{r}
+remove_nan <- function(ts) {
+  ts[!is.na(ts)]
+}
+
+# Apply the function to each time series in the list
+reading_lst <- lapply(reading_lst, remove_nan)
+```
+
+```{r}
+reading_cvi <- list()
+for (i in 2:10){
+  reading_clust <- tsclust(reading_lst, type = "partitional", k = i, distance = "dtw_basic", centroid = "pam")
+  reading_metric <- cvi(reading_clust, type = "valid", log.base = 10)
+  reading_cvi <- append(reading_cvi, list(reading_metric))
+}
+```
+
+```{r}
+reading_cvi_ma <- do.call(rbind, reading_cvi)
+rw <- c("K2","K3","K4","K5","K6","K7","K8","K9","K10")
+rownames(reading_cvi_ma) <- rw
+print(reading_cvi_ma)
+```
+– "Sil" (!): Silhouette index (Rousseeuw (1987); to be maximized).
+– "SF" (~): Score Function (Saitta et al. (2007); to be maximized; see notes).
+– "CH" (~): Calinski-Harabasz index (Arbelaitz et al. (2013); to be maximized).
+– "DB" (?): Davies-Bouldin index (Arbelaitz et al. (2013); to be minimized).
+– "DBstar" (?): Modified Davies-Bouldin index (DB*) (Kim and Ramakrishna (2005); to
+be minimized).
+– "D" (!): Dunn index (Arbelaitz et al. (2013); to be maximized).
+– "COP" (!): COP index (Arbelaitz et al. (2013); to be minimized).
+
+The optimal cluster numbers would be 6
+
+```{r}
+reading_clust_opt <- tsclust(reading_lst, type = "partitional", k = 6, distance = "dtw", centroid = "pam",seed = 725)
+plot(reading_clust_opt)
+```
+
+```{r}
+print(t(cbind(reading$Countries, cluster = reading_clust_opt@cluster)))
+```
+MATH DTW
+
+```{r}
+math <- read.csv("../data_all/dtw_math.csv")
+math <- subset(math, select = -c(X) )
+
+colnames(math)[colnames(math) == "X2000"] = "2000"
+colnames(math)[colnames(math) == "X2003"] = "2003"
+colnames(math)[colnames(math) == "X2006"] = "2006"
+colnames(math)[colnames(math) == "X2009"] = "2009"
+colnames(math)[colnames(math) == "X2012"] = "2012"
+colnames(math)[colnames(math) == "X2015"] = "2015"
+colnames(math)[colnames(math) == "X2018"] = "2018"
+
+dtw_math <- math[, -1]
+
+```
+
+```{r}
+math_lst <- tslist(dtw_math)
+
+# Apply the function to each time series in the list
+math_lst <- lapply(math_lst, remove_nan)
+
+print(math_lst)
+```
+```{r}
+math_cvi <- list()
+for (i in 2:10){
+  math_clust <- tsclust(math_lst, type = "partitional", k = i, distance = "dtw", centroid = "pam")
+  math_metric <- cvi(math_clust, type = "valid", log.base = 10)
+  math_cvi <- append(math_cvi, list(math_metric))
+}
+
+print(math_cvi)
+```
+
+```{r}
+math_cvi_ma <- do.call(rbind, math_cvi)
+rownames(math_cvi_ma) <- rw
+print(math_cvi_ma)
+```
+
+```{r}
+math_clust_opt <- tsclust(math_lst, type = "partitional", k = 7, distance = "dtw", centroid = "pam",seed = 725)
+plot(math_clust_opt)
+```
+
+```{r}
+print(t(cbind(math$Countries, cluster = math_clust_opt@cluster)))
+```
+
+```{r}
+sci <- read.csv("../data_all/dtw_sci.csv")
+sci <- subset(sci, select = -c(X) )
+
+colnames(sci)[colnames(sci) == "X2000"] = "2000"
+colnames(sci)[colnames(sci) == "X2003"] = "2003"
+colnames(sci)[colnames(sci) == "X2006"] = "2006"
+colnames(sci)[colnames(sci) == "X2009"] = "2009"
+colnames(sci)[colnames(sci) == "X2012"] = "2012"
+colnames(sci)[colnames(sci) == "X2015"] = "2015"
+colnames(sci)[colnames(sci) == "X2018"] = "2018"
+
+dtw_sci <- sci[, -1]
+```
+
+```{r}
+sci_lst <- tslist(dtw_sci)
+
+# Apply the function to each time series in the list
+sci_lst <- lapply(math_lst, remove_nan)
+
+```
+
+```{r}
+sci_cvi <- list()
+for (i in 2:10){
+  sci_clust <- tsclust(sci_lst, type = "partitional", k = i, distance = "dtw", centroid = "pam")
+  sci_metric <- cvi(sci_clust, type = "valid", log.base = 10)
+  sci_cvi <- append(sci_cvi, list(sci_metric))
+}
+
+sci_cvi_ma <- do.call(rbind, sci_cvi)
+rownames(sci_cvi_ma) <- rw
+print(sci_cvi_ma)
+```
+
+```{r}
+sci_clust_opt <- tsclust(sci_lst, type = "partitional", k = 6, distance = "dtw", centroid = "pam",seed = 725)
+plot(sci_clust_opt)
+```
+
+```{r}
+print(t(cbind(sci$Countries, cluster = sci_clust_opt@cluster)))
+```
