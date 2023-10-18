@@ -1,0 +1,242 @@
+---
+title: "dtw_oecd"
+author: "Kefan Yu"
+date: "2023-10-17"
+output: html_document
+---
+
+```{r}
+library(readxl)
+library(dtwclust)
+library(dtw)
+```
+
+```{r}
+reading <- read_excel("../../data/oecd/oecd_avg_clean.xlsx", sheet = "Reading")
+math <- read_excel("../../data/oecd/oecd_avg_clean.xlsx", sheet = "Math")
+sci <- read_excel("../../data/oecd/oecd_avg_clean.xlsx", sheet = "Science")
+```
+
+```{r}
+reading <- subset(reading, select = -c(...1) )
+country = reading[['Countries']]
+dtw_reading <- reading[, -1]
+```
+
+```{r}
+reading_lst <- tslist(dtw_reading)
+
+remove_nan <- function(ts) {
+  ts[!is.na(ts)]
+}
+
+# Apply the function to each time series in the list
+reading_lst <- lapply(reading_lst, remove_nan)
+```
+
+```{r}
+reading_cvi <- list()
+for (i in 2:6){
+  reading_clust <- tsclust(reading_lst, type = "partitional", k = i, distance = "dtw", centroid = "pam",set.seed(5))
+  reading_metric <- cvi(reading_clust, type = "valid", log.base = 10)
+  reading_cvi <- append(reading_cvi, list(reading_metric))
+}
+
+reading_cvi_ma <- do.call(rbind, reading_cvi)
+rw <- c("K2","K3","K4","K5","K6")
+rownames(reading_cvi_ma) <- rw
+print(reading_cvi_ma)
+```
+```{r}
+reading_clust_opt <- tsclust(reading_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 725)
+plot(reading_clust_opt)
+```
+```{r}
+print(t(cbind(reading$Countries, cluster = reading_clust_opt@cluster)))
+```
+
+```{r}
+math <- subset(math, select = -c(...1) )
+sci <- subset(sci, select = -c(...1) )
+```
+
+```{r}
+dtw_math <- math[, -1]
+
+math_lst <- tslist(dtw_math)
+
+# Apply the function to each time series in the list
+math_lst <- lapply(math_lst, remove_nan)
+```
+
+```{r}
+math_cvi <- list()
+for (i in 2:6){
+  math_clust <- tsclust(math_lst, type = "partitional", k = i, distance = "dtw", centroid = "pam",set.seed(4))
+  math_metric <- cvi(math_clust, type = "valid", log.base = 10)
+  math_cvi <- append(math_cvi, list(math_metric))
+}
+
+math_cvi_ma <- do.call(rbind, math_cvi)
+rownames(math_cvi_ma) <- rw
+print(math_cvi_ma)
+```
+
+```{r}
+math_clust_opt <- tsclust(math_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 725)
+plot(math_clust_opt)
+```
+
+```{r}
+print(t(cbind(math$Countries, cluster = math_clust_opt@cluster)))
+```
+
+```{r}
+dtw_sci <- sci[, -1]
+
+sci_lst <- tslist(dtw_sci)
+
+# Apply the function to each time series in the list
+sci_lst <- lapply(math_lst, remove_nan)
+
+```
+
+```{r}
+sci_cvi <- list()
+for (i in 2:6){
+  sci_clust <- tsclust(sci_lst, type = "partitional", k = i, distance = "dtw", centroid = "pam",set.seed(4))
+  sci_metric <- cvi(sci_clust, type = "valid", log.base = 10)
+  sci_cvi <- append(sci_cvi, list(sci_metric))
+}
+
+sci_cvi_ma <- do.call(rbind, sci_cvi)
+rownames(sci_cvi_ma) <- rw
+print(sci_cvi_ma)
+```
+
+```{r}
+sci_clust_opt <- tsclust(sci_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 725)
+plot(sci_clust_opt)
+```
+
+```{r}
+print(t(cbind(sci$Countries, cluster = sci_clust_opt@cluster)))
+```
+
+dtw and euclidean matrix genenration
+
+```{r}
+reading_dtw_ma <- reading_clust_opt@distmat
+```
+
+```{r}
+colnames(reading_dtw_ma) <- country
+rownames(reading_dtw_ma) <- country
+```
+
+```{r}
+reading_clust_opt_eu <- tsclust(reading_lst, type = "partitional", k = 4, distance = "Euclidean", centroid = "pam",seed = 725)
+```
+
+```{r}
+reading_eu_ma <- reading_clust_opt_eu@distmat
+```
+
+```{r}
+colnames(reading_eu_ma) <- country
+rownames(reading_eu_ma) <- country
+```
+
+```{r}
+reading_dtw_df <- as.data.frame(reading_dtw_ma)
+reading_eu_df <- as.data.frame(reading_eu_ma)
+```
+
+```{r}
+reading_dtw_df <- cbind(Countries = country, reading_dtw_df)
+reading_eu_df <- cbind(Countries = country, reading_eu_df)
+```
+
+```{r}
+library(writexl)
+
+write_xlsx(list("DTW" = reading_dtw_df, "Euclidean" = reading_eu_df),"../../data/dtw/reading_oecd_distance.xlsx")
+```
+
+```{r}
+math_dtw_ma <- math_clust_opt@distmat
+
+colnames(math_dtw_ma) <- country
+rownames(math_dtw_ma) <- country
+```
+
+```{r}
+math_clust_opt_eu <- tsclust(math_lst, type = "partitional", k = 4, distance = "Euclidean", centroid = "pam",seed = 725)
+```
+
+
+```{r}
+math_eu_ma <- math_clust_opt_eu@distmat
+
+colnames(math_eu_ma) <- country
+rownames(math_eu_ma) <- country
+```
+
+```{r}
+math_dtw_df <- as.data.frame(math_dtw_ma)
+math_eu_df <- as.data.frame(math_eu_ma)
+```
+
+```{r}
+math_dtw_df <- cbind(Countries = country, math_dtw_df)
+math_eu_df <- cbind(Countries = country, math_eu_df)
+```
+
+```{r}
+write_xlsx(list("DTW" = math_dtw_df, "Euclidean" = math_eu_df),"../../data/dtw/math_oecd_distance.xlsx")
+```
+
+```{r}
+sci_dtw_ma <- sci_clust_opt@distmat
+
+colnames(sci_dtw_ma) <- country
+rownames(sci_dtw_ma) <- country
+```
+
+```{r}
+sci_clust_opt_eu <- tsclust(sci_lst, type = "partitional", k = 4, distance = "Euclidean", centroid = "pam",seed = 725)
+```
+
+```{r}
+sci_eu_ma <- sci_clust_opt_eu@distmat
+
+colnames(sci_eu_ma) <- country
+rownames(sci_eu_ma) <- country
+```
+
+```{r}
+sci_dtw_df <- as.data.frame(sci_dtw_ma)
+sci_eu_df <- as.data.frame(sci_eu_ma)
+```
+
+```{r}
+sci_dtw_df <- cbind(Countries = country, sci_dtw_df)
+sci_eu_df <- cbind(Countries = country, sci_eu_df)
+```
+
+```{r}
+write_xlsx(list("DTW" = sci_dtw_df, "Euclidean" = sci_eu_df),"../../data/dtw/sci_oecd_distance.xlsx")
+```
+
+```{r}
+a1 <- c(7,9,6,9,12,6,4,6,8)
+a2 <- c(5,6,4,3,9)
+```
+
+```{r}
+plot(dtw(a1,a2, keep=TRUE, dist.method = "dtw"),type="twoway", col=c('blue', 'magenta'))
+```
+
+```{r}
+plot(dtw(a1,a2, keep=TRUE, dist.method = "Euclidean"),type="twoway", col=c('blue', 'magenta'))
+```
