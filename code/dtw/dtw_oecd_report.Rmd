@@ -1,0 +1,263 @@
+---
+title: "OECD_clust_report"
+author: "Kefan Yu"
+date: "2023-10-25"
+output: html_document
+fontsize: 15px
+---
+
+```{r}
+library(readxl)
+library(dtwclust)
+library(dtw)
+```
+
+Check different distance metric with example sequences
+
+```{r}
+a1 <- c(7,9,6,9,12,6,4,6,8)
+a2 <- c(10,5,7,3,2,7,1,5,4)
+```
+
+```{r}
+plot(dtw(a1,a2, keep=TRUE, dist.method = "dtw"),type="twoway", col=c('blue', 'magenta'))
+```
+
+```{r}
+plot(dtw(a1,a2, keep=TRUE, dist.method="Euclidean"),type="twoway", col=c('blue', 'magenta'))
+```
+The warning message says that "Argument dist.method does not usually make a difference with single-variate timeseries", so changing to euclidean distance metric would not affect out output. However, the sequences we are working on is also single-variate, but the euclidean and dtw dist matrix are different
+
+
+Average Score
+
+Reading
+
+```{r}
+reading <- read_excel("../../data/oecd/oecd_avg_clean.xlsx", sheet = "Reading")
+math <- read_excel("../../data/oecd/oecd_avg_clean.xlsx", sheet = "Math")
+sci <- read_excel("../../data/oecd/oecd_avg_clean.xlsx", sheet = "Science")
+```
+
+```{r}
+reading <- subset(reading, select = -c(...1) )
+country = reading[['Countries']]
+dtw_reading <- reading[, -1]
+```
+
+```{r}
+reading_lst <- tslist(dtw_reading)
+
+remove_nan <- function(ts) {
+  ts[!is.na(ts)]
+}
+
+# Apply the function to each time series in the list
+reading_lst <- lapply(reading_lst, remove_nan)
+```
+
+```{r}
+reading_cvi <- list()
+for (i in 2:10){
+  reading_clust <- tsclust(reading_lst, type = "partitional", k = i, distance = "dtw", centroid = "pam",set.seed(5))
+  reading_metric <- cvi(reading_clust, type = "valid", log.base = 10)
+  reading_cvi <- append(reading_cvi, list(reading_metric))
+}
+
+reading_cvi_ma <- do.call(rbind, reading_cvi)
+rw <- c("K2","K3","K4","K5","K6","K7","K8","K9","K10")
+rownames(reading_cvi_ma) <- rw
+print(reading_cvi_ma)
+```
+
+The measure I focused on is the Silhouette index (considering both the cohesion (average distance within a cluster) and separation (average distance between clusters) of data points), DB (validation of how well the clustering has been done is made using quantities and features inherent to the dataset), and Dunn index (the ratio of the smallest distance between observations not in the same cluster to the largest intra-cluster distance)
+
+We can see that K = 4 gives relatively large sil and D and small DB
+
+```{r}
+reading_clust_opt <- tsclust(reading_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 725)
+plot(reading_clust_opt)
+```
+
+```{r}
+print(t(cbind(reading$Countries, cluster = reading_clust_opt@cluster)))
+```
+```{r}
+result_reading_avg = cbind(reading$Countries, cluster = reading_clust_opt@cluster)
+result_reading_avg <- as.data.frame(result_reading_avg)
+
+cat("Number of countries in K1: ", nrow(result_reading_avg[result_reading_avg['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_reading_avg[result_reading_avg['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_reading_avg[result_reading_avg['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_reading_avg[result_reading_avg['cluster'] == "4", ]), "\n")
+```
+
+We can see that K2 and K4 have more countries than the other two clusters. We have Austria, Hungary, Italy, etc (K2) and France, Japan, Netherlands, etc (K4). Another interesting thing is that the medoid for each cluster is one of the sequence. From my research, for partitional clustering, medoid is an object within a cluster for which average dissimilarity between it and all the other the members of the cluster is minimal (the most central sequence) (https://medium.com/analytics-vidhya/partitional-clustering-181d42049670)
+
+We want to see if hierarchical clustering has the same medoid
+
+```{r}
+reading_clust_opt_h <- tsclust(reading_lst, type = "h", k = 4, distance = "dtw", seed = 725)
+plot(reading_clust_opt_h, type="sc")
+```
+
+```{r}
+print(t(cbind(reading$Countries, cluster = reading_clust_opt_h@cluster)))
+```
+Cluster 3 only  has Chile and Turkey and Cluster 4 only  has Colombia and Mexico
+
+```{r}
+result_reading_avg_h = cbind(reading$Countries, cluster = reading_clust_opt_h@cluster)
+result_reading_avg_h <- as.data.frame(result_reading_avg_h)
+
+cat("Number of countries in K1: ", nrow(result_reading_avg_h[result_reading_avg_h['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_reading_avg_h[result_reading_avg_h['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_reading_avg_h[result_reading_avg_h['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_reading_avg_h[result_reading_avg_h['cluster'] == "4", ]), "\n")
+```
+
+We can see that K2's country number surpasses other clusters.
+
+```{r}
+reading_clust_opt_h <- tsclust(reading_lst, type = "h", k = 6, distance = "dtw", seed = 725)
+plot(reading_clust_opt_h, type="sc")
+```
+
+Confusion about hierarchical: do we need to define k in the beginning?
+
+Math
+
+```{r}
+math <- subset(math, select = -c(...1) )
+sci <- subset(sci, select = -c(...1) )
+```
+
+```{r}
+dtw_math <- math[, -1]
+
+math_lst <- tslist(dtw_math)
+
+# Apply the function to each time series in the list
+math_lst <- lapply(math_lst, remove_nan)
+```
+
+```{r}
+math_cvi <- list()
+for (i in 2:10){
+  math_clust <- tsclust(math_lst, type = "partitional", k = i, distance = "dtw", centroid = "pam",set.seed(4))
+  math_metric <- cvi(math_clust, type = "valid", log.base = 10)
+  math_cvi <- append(math_cvi, list(math_metric))
+}
+
+math_cvi_ma <- do.call(rbind, math_cvi)
+rownames(math_cvi_ma) <- rw
+print(math_cvi_ma)
+```
+
+```{r}
+math_clust_opt <- tsclust(math_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 725)
+plot(math_clust_opt)
+```
+
+```{r}
+print(t(cbind(math$Countries, cluster = math_clust_opt@cluster)))
+```
+
+```{r}
+result_math_avg = cbind(reading$Countries, cluster = math_clust_opt@cluster)
+result_math_avg <- as.data.frame(result_math_avg)
+
+cat("Number of countries in K1: ", nrow(result_math_avg[result_math_avg['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_math_avg[result_math_avg['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_math_avg[result_math_avg['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_math_avg[result_math_avg['cluster'] == "4", ]), "\n")
+```
+
+We have only Japan and Korea in Cluster 1
+
+```{r}
+math_clust_opt_h <- tsclust(math_lst, type = "h", k = 4, distance = "dtw", seed = 725)
+plot(math_clust_opt_h, type="sc")
+```
+
+```{r}
+print(t(cbind(reading$Countries, cluster = math_clust_opt_h@cluster)))
+```
+
+```{r}
+result_math_avg_h = cbind(reading$Countries, cluster = math_clust_opt_h@cluster)
+result_math_avg_h <- as.data.frame(result_math_avg_h)
+
+cat("Number of countries in K1: ", nrow(result_math_avg_h[result_math_avg_h['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_math_avg_h[result_math_avg_h['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_math_avg_h[result_math_avg_h['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_math_avg_h[result_math_avg_h['cluster'] == "4", ]), "\n")
+```
+
+Comparing with K1 clustering, we have K1 be the largest cluster, and cluster 3 only have Chile, Mexico, Colombia (colombia and Mexico are in the same cluster for reading hier), cluster 4 contains Greece, Israel, Turkey. Japan and Korea are in cluster 2 with other countries.
+
+Science
+
+```{r}
+dtw_sci <- sci[, -1]
+
+sci_lst <- tslist(dtw_sci)
+
+# Apply the function to each time series in the list
+sci_lst <- lapply(sci_lst, remove_nan)
+
+```
+
+```{r}
+sci_cvi <- list()
+for (i in 2:10){
+  sci_clust <- tsclust(sci_lst, type = "partitional", k = i, distance = "dtw", centroid = "pam",set.seed(4))
+  sci_metric <- cvi(sci_clust, type = "valid", log.base = 10)
+  sci_cvi <- append(sci_cvi, list(sci_metric))
+}
+
+sci_cvi_ma <- do.call(rbind, sci_cvi)
+rownames(sci_cvi_ma) <- rw
+print(sci_cvi_ma)
+```
+ 
+```{r}
+sci_clust_opt <- tsclust(sci_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 725)
+plot(sci_clust_opt)
+```
+
+```{r}
+print(t(cbind(sci$Countries, cluster = sci_clust_opt@cluster)))
+```
+
+```{r}
+result_sci_avg = cbind(reading$Countries, cluster = sci_clust_opt@cluster)
+result_sci_avg <- as.data.frame(result_sci_avg)
+
+cat("Number of countries in K1: ", nrow(result_sci_avg[result_sci_avg['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_sci_avg[result_sci_avg['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_sci_avg[result_sci_avg['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_sci_avg[result_sci_avg['cluster'] == "4", ]), "\n")
+```
+
+
+```{r}
+sci_clust_opt_h <- tsclust(sci_lst, type = "h", k = 4, distance = "dtw", seed = 725)
+plot(sci_clust_opt_h, type="sc")
+```
+
+```{r}
+print(t(cbind(reading$Countries, cluster = sci_clust_opt_h@cluster)))
+```
+
+```{r}
+result_sci_avg_h = cbind(reading$Countries, cluster = sci_clust_opt_h@cluster)
+result_sci_avg_h <- as.data.frame(result_sci_avg_h)
+
+cat("Number of countries in K1: ", nrow(result_sci_avg_h[result_sci_avg_h['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_sci_avg_h[result_sci_avg_h['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_sci_avg_h[result_sci_avg_h['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_sci_avg_h[result_sci_avg_h['cluster'] == "4", ]), "\n")
+```
+
+
