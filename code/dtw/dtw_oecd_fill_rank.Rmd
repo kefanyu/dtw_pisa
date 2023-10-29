@@ -1,7 +1,7 @@
 ---
-title: "dtw_oecd_fill"
+title: "dtw_oecd_rank_filled"
 author: "Kefan Yu"
-date: "2023-10-28"
+date: "2023-10-29"
 output: html_document
 ---
 
@@ -12,15 +12,17 @@ library(dtw)
 ```
 
 ```{r}
-reading <- read_excel("../../data/oecd/oecd_avg_clean.xlsx", sheet = "Reading")
-math <- read_excel("../../data/oecd/oecd_avg_clean.xlsx", sheet = "Math")
-sci <- read_excel("../../data/oecd/oecd_avg_clean.xlsx", sheet = "Science")
+reading <- read_excel("../../data/oecd/oecd_rank.xlsx", sheet = "Reading")
+math <- read_excel("../../data/oecd/oecd_rank.xlsx", sheet = "Math")
+sci <- read_excel("../../data/oecd/oecd_rank.xlsx", sheet = "Science")
 ```
+
 
 ```{r}
 reading <- subset(reading, select = -c(...1) )
 math <- subset(math, select = -c(...1) )
 sci <- subset(sci, select = -c(...1) )
+country = reading[['Countries']]
 ```
 
 ```{r}
@@ -151,26 +153,13 @@ for (sci_index in sci_nan) {
 ```{r}
 print(sci_missing)
 ```
-
-We find out that most countries miss the first one or two years' exams.
-
-fill in the nan with preceding or following values
-
-```{r}
-country = reading[['Countries']]
-
-dtw_reading <- reading[, -1]
-
-dtw_reading
-```
-
 ```{r}
 library(zoo)
-dtw_reading[] <- t(apply(dtw_reading, 1, function(x) na.locf0(na.locf0(x), fromLast = TRUE)))
-dtw_reading
 ```
 
 ```{r}
+dtw_reading <- reading[, -1]
+dtw_reading[] <- t(apply(dtw_reading, 1, function(x) na.locf0(na.locf0(x), fromLast = TRUE)))
 reading_lst <- tslist(dtw_reading)
 
 reading_cvi <- list()
@@ -184,7 +173,9 @@ reading_cvi_ma <- do.call(rbind, reading_cvi)
 rw <- c("K2","K3","K4","K5","K6","K7","K8","K9","K10")
 rownames(reading_cvi_ma) <- rw
 print(reading_cvi_ma)
+
 ```
+
 ```{r}
 reading_clust_opt <- tsclust(reading_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 725)
 plot(reading_clust_opt)
@@ -203,8 +194,6 @@ cat("Number of countries in K2: ", nrow(result_reading_avg[result_reading_avg['c
 cat("Number of countries in K3: ", nrow(result_reading_avg[result_reading_avg['cluster'] == "3", ]), "\n")
 cat("Number of countries in K4: ", nrow(result_reading_avg[result_reading_avg['cluster'] == "4", ]), "\n")
 ```
-
-With the missing values filled, we can see that Columbia and Chile are still clustered with Mexico
 
 ```{r}
 reading_clust_opt_h <- tsclust(reading_lst, type = "h", k = 4, distance = "dtw", seed = 725)
@@ -225,28 +214,13 @@ cat("Number of countries in K3: ", nrow(result_reading_avg_h[result_reading_avg_
 cat("Number of countries in K4: ", nrow(result_reading_avg_h[result_reading_avg_h['cluster'] == "4", ]), "\n")
 ```
 
-Cluster 3 only  has Chile and Turkey and Cluster 4 only  has Colombia and Mexico, same as unfilling results.
-
-```{r}
-reading_clust_opt_h6 <- tsclust(reading_lst, type = "h", k = 6, distance = "dtw", seed = 725)
-plot(reading_clust_opt_h6, type="sc")
-```
-
-```{r}
-print(t(cbind(reading$Countries, cluster = reading_clust_opt_h6@cluster)))
-```
-
 ```{r}
 dtw_math <- math[, -1]
 
 dtw_math <- subset(dtw_math, select = -c(`2000`) )
-```
 
-```{r}
 dtw_math[] <- t(apply(dtw_math, 1, function(x) na.locf0(na.locf0(x), fromLast = TRUE)))
-```
 
-```{r}
 math_lst <- tslist(dtw_math)
 ```
 
@@ -264,26 +238,28 @@ print(math_cvi_ma)
 ```
 
 ```{r}
-math_clust_opt <- tsclust(math_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 725)
-plot(math_clust_opt)
+math_clust_opt6 <- tsclust(math_lst, type = "partitional", k = 6, distance = "dtw", centroid = "pam",seed = 725)
+plot(math_clust_opt6)
 ```
 
 ```{r}
-print(t(cbind(math$Countries, cluster = math_clust_opt@cluster)))
+print(t(cbind(math$Countries, cluster = math_clust_opt6@cluster)))
 ```
 
 ```{r}
-result_math_avg = cbind(reading$Countries, cluster = math_clust_opt@cluster)
-result_math_avg <- as.data.frame(result_math_avg)
+result_math_rank = cbind(reading$Countries, cluster = math_clust_opt6@cluster)
+result_math_rank <- as.data.frame(result_math_rank)
 
-cat("Number of countries in K1: ", nrow(result_math_avg[result_math_avg['cluster'] == "1", ]), "\n")
-cat("Number of countries in K2: ", nrow(result_math_avg[result_math_avg['cluster'] == "2", ]), "\n")
-cat("Number of countries in K3: ", nrow(result_math_avg[result_math_avg['cluster'] == "3", ]), "\n")
-cat("Number of countries in K4: ", nrow(result_math_avg[result_math_avg['cluster'] == "4", ]), "\n")
+cat("Number of countries in K1: ", nrow(result_math_rank[result_math_rank['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_math_rank[result_math_rank['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_math_rank[result_math_rank['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_math_rank[result_math_rank['cluster'] == "4", ]), "\n")
+cat("Number of countries in K5: ", nrow(result_math_rank[result_math_rank['cluster'] == "5", ]), "\n")
+cat("Number of countries in K6: ", nrow(result_math_rank[result_math_rank['cluster'] == "6", ]), "\n")
 ```
 
 ```{r}
-math_clust_opt_h <- tsclust(math_lst, type = "h", k = 4, distance = "dtw", seed = 725)
+math_clust_opt_h <- tsclust(math_lst, type = "h", k = 6, distance = "dtw", seed = 725)
 plot(math_clust_opt_h, type="sc")
 ```
 
@@ -299,9 +275,9 @@ cat("Number of countries in K1: ", nrow(result_math_avg_h[result_math_avg_h['clu
 cat("Number of countries in K2: ", nrow(result_math_avg_h[result_math_avg_h['cluster'] == "2", ]), "\n")
 cat("Number of countries in K3: ", nrow(result_math_avg_h[result_math_avg_h['cluster'] == "3", ]), "\n")
 cat("Number of countries in K4: ", nrow(result_math_avg_h[result_math_avg_h['cluster'] == "4", ]), "\n")
+cat("Number of countries in K5: ", nrow(result_math_avg_h[result_math_avg_h['cluster'] == "5", ]), "\n")
+cat("Number of countries in K6: ", nrow(result_math_avg_h[result_math_avg_h['cluster'] == "6", ]), "\n")
 ```
-
-We can see the result is the same
 
 ```{r}
 dtw_sci <- sci[, -1]
@@ -341,7 +317,6 @@ cat("Number of countries in K2: ", nrow(result_sci_avg[result_sci_avg['cluster']
 cat("Number of countries in K3: ", nrow(result_sci_avg[result_sci_avg['cluster'] == "3", ]), "\n")
 cat("Number of countries in K4: ", nrow(result_sci_avg[result_sci_avg['cluster'] == "4", ]), "\n")
 ```
-
 
 ```{r}
 sci_clust_opt_h <- tsclust(sci_lst, type = "h", k = 4, distance = "dtw", seed = 725)
