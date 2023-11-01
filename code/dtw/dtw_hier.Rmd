@@ -1,0 +1,61 @@
+---
+title: "dtw_hier"
+author: "Kefan Yu"
+date: "2023-10-31"
+output: html_document
+---
+
+```{r}
+library(readxl)
+library(dtwclust)
+library(dtw)
+```
+
+```{r}
+reading <- read_excel("../../data/dtw/reading_oecd_distance.xlsx", sheet = "DTW")
+#math <- read_excel("../../data/oecd/oecd_avg_clean.xlsx", sheet = "Math")
+#sci <- read_excel("../../data/oecd/oecd_avg_clean.xlsx", sheet = "Science")
+```
+
+```{r}
+reading <- subset(reading, select = -c(Countries) )
+#math <- subset(math, select = -c(...1) )
+#sci <- subset(sci, select = -c(...1) )
+```
+
+```{r}
+reading_ma <- as.matrix(reading)
+#colnames(reading_ma) <- character(0)
+```
+
+```{r}
+reading_ma2 <- as.dist(reading_ma) # referred from https://github.com/drostlab/philentropy/issues/13
+```
+
+Agglomerative (bottom-up)
+
+```{r}
+reading_clust_opt_h_bottom <- hclust(reading_ma2, method = "ward.D2")
+plot(reading_clust_opt_h_bottom)
+rect.hclust(reading_clust_opt_h_bottom, k = 4)
+```
+
+```{r}
+reading_clust_opt_h_bottomd <- hclust(reading_ma2, method = "ward.D")
+plot(reading_clust_opt_h_bottomd)
+rect.hclust(reading_clust_opt_h_bottomd, k = 4)
+```
+
+Divisive (top-down):
+
+```{r}
+library(cluster)
+```
+
+```{r}
+divisive_clusters <- diana(reading_ma2)
+
+plot(divisive_clusters)
+rect.hclust(divisive_clusters, k = 4)
+```
+
