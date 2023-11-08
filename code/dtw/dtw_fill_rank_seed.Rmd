@@ -1,0 +1,467 @@
+---
+title: "dtw_fill_rank_seed"
+author: "Kefan Yu"
+date: "2023-11-08"
+output: html_document
+---
+
+
+```{r}
+library(readxl)
+library(dtwclust)
+library(dtw)
+```
+
+```{r}
+reading <- read_excel("../../data/oecd/oecd_rank.xlsx", sheet = "Reading")
+math <- read_excel("../../data/oecd/oecd_rank.xlsx", sheet = "Math")
+sci <- read_excel("../../data/oecd/oecd_rank.xlsx", sheet = "Science")
+```
+
+```{r}
+reading <- subset(reading, select = -c(...1) )
+math <- subset(math, select = -c(...1) )
+sci <- subset(sci, select = -c(...1) )
+country = reading[['Countries']]
+```
+
+```{r}
+library(zoo)
+```
+
+```{r}
+dtw_reading <- reading[, -1]
+dtw_reading[] <- t(apply(dtw_reading, 1, function(x) na.locf0(na.locf0(x), fromLast = TRUE)))
+reading_lst <- tslist(dtw_reading)
+
+reading_cvi <- list()
+for (i in 2:10){
+  reading_clust <- tsclust(reading_lst, type = "partitional", k = i, distance = "dtw", centroid = "pam",set.seed(5))
+  reading_metric <- cvi(reading_clust, type = "valid", log.base = 10)
+  reading_cvi <- append(reading_cvi, list(reading_metric))
+}
+
+reading_cvi_ma <- do.call(rbind, reading_cvi)
+rw <- c("K2","K3","K4","K5","K6","K7","K8","K9","K10")
+rownames(reading_cvi_ma) <- rw
+print(reading_cvi_ma)
+
+```
+
+```{r}
+reading_clust_opt <- tsclust(reading_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 725)
+
+result_reading_avg = cbind(reading$Countries, cluster = reading_clust_opt@cluster)
+result_reading_avg <- as.data.frame(result_reading_avg)
+
+cat("Number of countries in K1: ", nrow(result_reading_avg[result_reading_avg['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_reading_avg[result_reading_avg['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_reading_avg[result_reading_avg['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_reading_avg[result_reading_avg['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+reading_clust_opt2 <- tsclust(reading_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 825)
+
+result_reading_avg2 = cbind(reading$Countries, cluster = reading_clust_opt2@cluster)
+result_reading_avg2 <- as.data.frame(result_reading_avg2)
+
+cat("Number of countries in K1: ", nrow(result_reading_avg2[result_reading_avg2['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_reading_avg2[result_reading_avg2['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_reading_avg2[result_reading_avg2['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_reading_avg2[result_reading_avg2['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+reading_clust_opt3 <- tsclust(reading_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 925)
+
+result_reading_avg3 = cbind(reading$Countries, cluster = reading_clust_opt3@cluster)
+result_reading_avg3 <- as.data.frame(result_reading_avg3)
+
+cat("Number of countries in K1: ", nrow(result_reading_avg3[result_reading_avg3['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_reading_avg3[result_reading_avg3['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_reading_avg3[result_reading_avg3['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_reading_avg3[result_reading_avg3['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+reading_clust_opt4 <- tsclust(reading_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 1025)
+
+result_reading_avg4 = cbind(reading$Countries, cluster = reading_clust_opt4@cluster)
+result_reading_avg4 <- as.data.frame(result_reading_avg4)
+
+cat("Number of countries in K1: ", nrow(result_reading_avg4[result_reading_avg4['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_reading_avg4[result_reading_avg4['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_reading_avg4[result_reading_avg4['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_reading_avg4[result_reading_avg4['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+reading_clust_opt5 <- tsclust(reading_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 1125)
+
+result_reading_avg5 = cbind(reading$Countries, cluster = reading_clust_opt5@cluster)
+result_reading_avg5 <- as.data.frame(result_reading_avg5)
+
+cat("Number of countries in K1: ", nrow(result_reading_avg5[result_reading_avg5['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_reading_avg5[result_reading_avg5['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_reading_avg5[result_reading_avg5['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_reading_avg5[result_reading_avg5['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+plot(reading_clust_opt)
+```
+
+```{r}
+plot(reading_clust_opt5)
+```
+
+```{r}
+print(t(cbind(reading$Countries, cluster = reading_clust_opt@cluster)))
+```
+
+```{r}
+print(t(cbind(reading$Countries, cluster = reading_clust_opt5@cluster)))
+```
+
+```{r}
+reading_clust_opt_h <- tsclust(reading_lst, type = "h", k = 4, distance = "dtw", seed = 725)
+
+result_reading_avg_h = cbind(reading$Countries, cluster = reading_clust_opt_h@cluster)
+result_reading_avg_h <- as.data.frame(result_reading_avg_h)
+
+cat("Number of countries in K1: ", nrow(result_reading_avg_h[result_reading_avg_h['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_reading_avg_h[result_reading_avg_h['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_reading_avg_h[result_reading_avg_h['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_reading_avg_h[result_reading_avg_h['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+reading_clust_opt_h2 <- tsclust(reading_lst, type = "h", k = 4, distance = "dtw", seed = 825)
+
+result_reading_avg_h2 = cbind(reading$Countries, cluster = reading_clust_opt_h2@cluster)
+result_reading_avg_h2 <- as.data.frame(result_reading_avg_h2)
+
+cat("Number of countries in K1: ", nrow(result_reading_avg_h2[result_reading_avg_h2['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_reading_avg_h2[result_reading_avg_h2['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_reading_avg_h2[result_reading_avg_h2['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_reading_avg_h2[result_reading_avg_h2['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+reading_clust_opt_h3 <- tsclust(reading_lst, type = "h", k = 4, distance = "dtw", seed = 925)
+
+result_reading_avg_h3 = cbind(reading$Countries, cluster = reading_clust_opt_h3@cluster)
+result_reading_avg_h3 <- as.data.frame(result_reading_avg_h3)
+
+cat("Number of countries in K1: ", nrow(result_reading_avg_h3[result_reading_avg_h3['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_reading_avg_h3[result_reading_avg_h3['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_reading_avg_h3[result_reading_avg_h3['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_reading_avg_h3[result_reading_avg_h3['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+reading_clust_opt_h4 <- tsclust(reading_lst, type = "h", k = 4, distance = "dtw", seed = 1025)
+
+result_reading_avg_h4 = cbind(reading$Countries, cluster = reading_clust_opt_h4@cluster)
+result_reading_avg_h4 <- as.data.frame(result_reading_avg_h4)
+
+cat("Number of countries in K1: ", nrow(result_reading_avg_h4[result_reading_avg_h4['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_reading_avg_h4[result_reading_avg_h4['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_reading_avg_h4[result_reading_avg_h4['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_reading_avg_h4[result_reading_avg_h4['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+reading_clust_opt_h5 <- tsclust(reading_lst, type = "h", k = 4, distance = "dtw", seed = 1125)
+
+result_reading_avg_h5 = cbind(reading$Countries, cluster = reading_clust_opt_h5@cluster)
+result_reading_avg_h5 <- as.data.frame(result_reading_avg_h5)
+
+cat("Number of countries in K1: ", nrow(result_reading_avg_h5[result_reading_avg_h5['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_reading_avg_h5[result_reading_avg_h5['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_reading_avg_h5[result_reading_avg_h5['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_reading_avg_h5[result_reading_avg_h5['cluster'] == "4", ]), "\n")
+```
+
+MATH
+
+```{r}
+dtw_math <- math[, -1]
+
+dtw_math <- subset(dtw_math, select = -c(`2000`) )
+
+dtw_math[] <- t(apply(dtw_math, 1, function(x) na.locf0(na.locf0(x), fromLast = TRUE)))
+
+math_lst <- tslist(dtw_math)
+```
+
+```{r}
+math_cvi <- list()
+for (i in 2:10){
+  math_clust <- tsclust(math_lst, type = "partitional", k = i, distance = "dtw", centroid = "pam",set.seed(4))
+  math_metric <- cvi(math_clust, type = "valid", log.base = 10)
+  math_cvi <- append(math_cvi, list(math_metric))
+}
+
+math_cvi_ma <- do.call(rbind, math_cvi)
+rownames(math_cvi_ma) <- rw
+print(math_cvi_ma)
+```
+
+```{r}
+math_clust_opt <- tsclust(math_lst, type = "partitional", k = 6, distance = "dtw", centroid = "pam",seed = 725)
+
+result_math_avg = cbind(reading$Countries, cluster = math_clust_opt@cluster)
+result_math_avg <- as.data.frame(result_math_avg)
+
+cat("Number of countries in K1: ", nrow(result_math_avg[result_math_avg['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_math_avg[result_math_avg['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_math_avg[result_math_avg['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_math_avg[result_math_avg['cluster'] == "4", ]), "\n")
+cat("Number of countries in K5: ", nrow(result_math_avg[result_math_avg['cluster'] == "5", ]), "\n")
+cat("Number of countries in K6: ", nrow(result_math_avg[result_math_avg['cluster'] == "6", ]), "\n")
+```
+
+```{r}
+math_clust_opt2 <- tsclust(math_lst, type = "partitional", k = 6, distance = "dtw", centroid = "pam",seed = 726)
+
+result_math_avg2 = cbind(reading$Countries, cluster = math_clust_opt2@cluster)
+result_math_avg2 <- as.data.frame(result_math_avg2)
+
+cat("Number of countries in K1: ", nrow(result_math_avg2[result_math_avg2['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_math_avg2[result_math_avg2['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_math_avg2[result_math_avg2['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_math_avg2[result_math_avg2['cluster'] == "4", ]), "\n")
+cat("Number of countries in K5: ", nrow(result_math_avg2[result_math_avg2['cluster'] == "5", ]), "\n")
+cat("Number of countries in K6: ", nrow(result_math_avg2[result_math_avg2['cluster'] == "6", ]), "\n")
+```
+
+```{r}
+math_clust_opt3 <- tsclust(math_lst, type = "partitional", k = 6, distance = "dtw", centroid = "pam",seed = 727)
+
+result_math_avg3 = cbind(reading$Countries, cluster = math_clust_opt3@cluster)
+result_math_avg3 <- as.data.frame(result_math_avg3)
+
+cat("Number of countries in K1: ", nrow(result_math_avg3[result_math_avg3['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_math_avg3[result_math_avg3['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_math_avg3[result_math_avg3['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_math_avg3[result_math_avg3['cluster'] == "4", ]), "\n")
+cat("Number of countries in K5: ", nrow(result_math_avg3[result_math_avg3['cluster'] == "5", ]), "\n")
+cat("Number of countries in K6: ", nrow(result_math_avg3[result_math_avg3['cluster'] == "6", ]), "\n")
+```
+
+```{r}
+math_clust_opt4 <- tsclust(math_lst, type = "partitional", k = 6, distance = "dtw", centroid = "pam",seed = 728)
+
+result_math_avg4 = cbind(reading$Countries, cluster = math_clust_opt4@cluster)
+result_math_avg4 <- as.data.frame(result_math_avg4)
+
+cat("Number of countries in K1: ", nrow(result_math_avg4[result_math_avg4['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_math_avg4[result_math_avg4['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_math_avg4[result_math_avg4['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_math_avg4[result_math_avg4['cluster'] == "4", ]), "\n")
+cat("Number of countries in K5: ", nrow(result_math_avg4[result_math_avg4['cluster'] == "5", ]), "\n")
+cat("Number of countries in K6: ", nrow(result_math_avg4[result_math_avg4['cluster'] == "6", ]), "\n")
+```
+
+```{r}
+math_clust_opt5 <- tsclust(math_lst, type = "partitional", k = 6, distance = "dtw", centroid = "pam",seed = 729)
+
+result_math_avg5 = cbind(reading$Countries, cluster = math_clust_opt5@cluster)
+result_math_avg5 <- as.data.frame(result_math_avg5)
+
+cat("Number of countries in K1: ", nrow(result_math_avg5[result_math_avg5['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_math_avg5[result_math_avg5['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_math_avg5[result_math_avg5['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_math_avg5[result_math_avg5['cluster'] == "4", ]), "\n")
+cat("Number of countries in K5: ", nrow(result_math_avg5[result_math_avg5['cluster'] == "5", ]), "\n")
+cat("Number of countries in K6: ", nrow(result_math_avg5[result_math_avg5['cluster'] == "6", ]), "\n")
+```
+
+```{r}
+math_clust_opt6 <- tsclust(math_lst, type = "partitional", k = 6, distance = "dtw", centroid = "pam",seed = 730)
+
+result_math_avg6 = cbind(reading$Countries, cluster = math_clust_opt6@cluster)
+result_math_avg6 <- as.data.frame(result_math_avg6)
+
+cat("Number of countries in K1: ", nrow(result_math_avg6[result_math_avg6['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_math_avg6[result_math_avg6['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_math_avg6[result_math_avg6['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_math_avg6[result_math_avg6['cluster'] == "4", ]), "\n")
+cat("Number of countries in K5: ", nrow(result_math_avg6[result_math_avg6['cluster'] == "5", ]), "\n")
+cat("Number of countries in K6: ", nrow(result_math_avg6[result_math_avg6['cluster'] == "6", ]), "\n")
+```
+
+```{r}
+math_clust_opt7 <- tsclust(math_lst, type = "partitional", k = 6, distance = "dtw", centroid = "pam",seed = 731)
+
+result_math_avg7 = cbind(reading$Countries, cluster = math_clust_opt7@cluster)
+result_math_avg7 <- as.data.frame(result_math_avg7)
+
+cat("Number of countries in K1: ", nrow(result_math_avg7[result_math_avg7['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_math_avg7[result_math_avg7['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_math_avg7[result_math_avg7['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_math_avg7[result_math_avg7['cluster'] == "4", ]), "\n")
+cat("Number of countries in K5: ", nrow(result_math_avg7[result_math_avg7['cluster'] == "5", ]), "\n")
+cat("Number of countries in K6: ", nrow(result_math_avg7[result_math_avg7['cluster'] == "6", ]), "\n")
+```
+
+```{r}
+math_clust_opt8 <- tsclust(math_lst, type = "partitional", k = 6, distance = "dtw", centroid = "pam",seed = 732)
+
+result_math_avg8 = cbind(reading$Countries, cluster = math_clust_opt8@cluster)
+result_math_avg8 <- as.data.frame(result_math_avg8)
+
+cat("Number of countries in K1: ", nrow(result_math_avg8[result_math_avg8['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_math_avg8[result_math_avg8['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_math_avg8[result_math_avg8['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_math_avg8[result_math_avg8['cluster'] == "4", ]), "\n")
+cat("Number of countries in K5: ", nrow(result_math_avg8[result_math_avg8['cluster'] == "5", ]), "\n")
+cat("Number of countries in K6: ", nrow(result_math_avg8[result_math_avg8['cluster'] == "6", ]), "\n")
+```
+
+```{r}
+math_clust_opt9 <- tsclust(math_lst, type = "partitional", k = 6, distance = "dtw", centroid = "pam",seed = 7332)
+
+result_math_avg9 = cbind(reading$Countries, cluster = math_clust_opt9@cluster)
+result_math_avg9 <- as.data.frame(result_math_avg9)
+
+cat("Number of countries in K1: ", nrow(result_math_avg9[result_math_avg9['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_math_avg9[result_math_avg9['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_math_avg9[result_math_avg9['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_math_avg9[result_math_avg9['cluster'] == "4", ]), "\n")
+cat("Number of countries in K5: ", nrow(result_math_avg9[result_math_avg9['cluster'] == "5", ]), "\n")
+cat("Number of countries in K6: ", nrow(result_math_avg9[result_math_avg9['cluster'] == "6", ]), "\n")
+```
+
+```{r}
+math_clust_opt10 <- tsclust(math_lst, type = "partitional", k = 6, distance = "dtw", centroid = "pam",seed = 734)
+
+result_math_avg10 = cbind(reading$Countries, cluster = math_clust_opt10@cluster)
+result_math_avg10 <- as.data.frame(result_math_avg10)
+
+cat("Number of countries in K1: ", nrow(result_math_avg10[result_math_avg10['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_math_avg10[result_math_avg10['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_math_avg10[result_math_avg10['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_math_avg10[result_math_avg10['cluster'] == "4", ]), "\n")
+cat("Number of countries in K5: ", nrow(result_math_avg10[result_math_avg10['cluster'] == "5", ]), "\n")
+cat("Number of countries in K6: ", nrow(result_math_avg10[result_math_avg10['cluster'] == "6", ]), "\n")
+```
+
+
+
+SCI
+
+```{r}
+dtw_sci <- sci[, -1]
+dtw_sci <- subset(dtw_sci, select = -c(`2000`,`2003`) )
+dtw_sci[] <- t(apply(dtw_sci, 1, function(x) na.locf0(na.locf0(x), fromLast = TRUE)))
+sci_lst <- tslist(dtw_sci)
+
+
+sci_cvi <- list()
+for (i in 2:10){
+  sci_clust <- tsclust(sci_lst, type = "partitional", k = i, distance = "dtw", centroid = "pam",set.seed(4))
+  sci_metric <- cvi(sci_clust, type = "valid", log.base = 10)
+  sci_cvi <- append(sci_cvi, list(sci_metric))
+}
+
+sci_cvi_ma <- do.call(rbind, sci_cvi)
+rownames(sci_cvi_ma) <- rw
+print(sci_cvi_ma)
+
+```
+
+```{r}
+sci_clust_opt <- tsclust(sci_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 725)
+result_sci_avg = cbind(reading$Countries, cluster = sci_clust_opt@cluster)
+result_sci_avg <- as.data.frame(result_sci_avg)
+
+cat("Number of countries in K1: ", nrow(result_sci_avg[result_sci_avg['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_sci_avg[result_sci_avg['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_sci_avg[result_sci_avg['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_sci_avg[result_sci_avg['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+sci_clust_opt2 <- tsclust(sci_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 825)
+result_sci_avg2 = cbind(reading$Countries, cluster = sci_clust_opt2@cluster)
+result_sci_avg2 <- as.data.frame(result_sci_avg2)
+
+cat("Number of countries in K1: ", nrow(result_sci_avg2[result_sci_avg2['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_sci_avg2[result_sci_avg2['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_sci_avg2[result_sci_avg2['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_sci_avg2[result_sci_avg2['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+sci_clust_opt3 <- tsclust(sci_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 925)
+result_sci_avg3 = cbind(reading$Countries, cluster = sci_clust_opt3@cluster)
+result_sci_avg3 <- as.data.frame(result_sci_avg3)
+
+cat("Number of countries in K1: ", nrow(result_sci_avg3[result_sci_avg3['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_sci_avg3[result_sci_avg3['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_sci_avg3[result_sci_avg3['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_sci_avg3[result_sci_avg3['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+sci_clust_opt4 <- tsclust(sci_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 1025)
+result_sci_avg4 = cbind(reading$Countries, cluster = sci_clust_opt4@cluster)
+result_sci_avg4 <- as.data.frame(result_sci_avg4)
+
+cat("Number of countries in K1: ", nrow(result_sci_avg4[result_sci_avg4['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_sci_avg4[result_sci_avg4['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_sci_avg4[result_sci_avg4['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_sci_avg4[result_sci_avg4['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+sci_clust_opt5 <- tsclust(sci_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 1125)
+result_sci_avg5 = cbind(reading$Countries, cluster = sci_clust_opt5@cluster)
+result_sci_avg5 <- as.data.frame(result_sci_avg5)
+
+cat("Number of countries in K1: ", nrow(result_sci_avg5[result_sci_avg5['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_sci_avg5[result_sci_avg5['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_sci_avg5[result_sci_avg5['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_sci_avg5[result_sci_avg5['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+sci_clust_opt6 <- tsclust(sci_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 1225)
+result_sci_avg6 = cbind(reading$Countries, cluster = sci_clust_opt6@cluster)
+result_sci_avg6 <- as.data.frame(result_sci_avg6)
+
+cat("Number of countries in K1: ", nrow(result_sci_avg6[result_sci_avg6['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_sci_avg6[result_sci_avg6['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_sci_avg6[result_sci_avg6['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_sci_avg6[result_sci_avg6['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+sci_clust_opt7 <- tsclust(sci_lst, type = "partitional", k = 4, distance = "dtw", centroid = "pam",seed = 1325)
+result_sci_avg7 = cbind(reading$Countries, cluster = sci_clust_opt7@cluster)
+result_sci_avg7 <- as.data.frame(result_sci_avg7)
+
+cat("Number of countries in K1: ", nrow(result_sci_avg7[result_sci_avg7['cluster'] == "1", ]), "\n")
+cat("Number of countries in K2: ", nrow(result_sci_avg7[result_sci_avg7['cluster'] == "2", ]), "\n")
+cat("Number of countries in K3: ", nrow(result_sci_avg7[result_sci_avg7['cluster'] == "3", ]), "\n")
+cat("Number of countries in K4: ", nrow(result_sci_avg7[result_sci_avg7['cluster'] == "4", ]), "\n")
+```
+
+```{r}
+plot(sci_clust_opt)
+```
+
+```{r}
+plot(sci_clust_opt7)
+```
+
+```{r}
+print(t(cbind(reading$Countries, cluster = sci_clust_opt@cluster)))
+```
+
+```{r}
+print(t(cbind(reading$Countries, cluster = sci_clust_opt7@cluster)))
+```
